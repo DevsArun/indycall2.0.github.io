@@ -4,18 +4,6 @@ let activeInput = "targetNumber";
 
 // --- STARTUP LOGIC ---
 window.onload = () => {
-    // Initialize Google OAuth programmatically to prevent "Missing client_id" errors
-    google.accounts.id.initialize({
-        client_id: "736271030289-cju2otol90qc96h6cflik6timp1g87ui.apps.googleusercontent.com",
-        callback: handleCredentialResponse
-    });
-
-    // Render the button automatically into the div
-    google.accounts.id.renderButton(
-        document.querySelector(".g_id_signin"),
-        { theme: "outline", size: "large" } 
-    );
-
     updateUI();
     loadCoins();
     loadHistory();
@@ -42,12 +30,8 @@ function updateUI() {
 // --- GOOGLE AUTH HANDLER ---
 function handleCredentialResponse(response) {
     const responsePayload = decodeJwtResponse(response.credential);
-    
-    // Save to memory
     localStorage.setItem("userLogged", "true");
     localStorage.setItem("userName", responsePayload.name);
-    
-    // Refresh UI immediately
     updateUI();
     loadCoins();
     alert("Welcome " + responsePayload.name);
@@ -63,9 +47,7 @@ function decodeJwtResponse(token) {
 function logout() {
     localStorage.removeItem("userLogged");
     localStorage.removeItem("userName");
-    // Also sign out from Google session
-    google.accounts.id.disableAutoSelect();
-    window.location.reload(); 
+    window.location.reload();
 }
 
 // --- DATA LOADING ---
@@ -73,7 +55,8 @@ function loadCoins() {
     let coins = localStorage.getItem("coins") || 0;
     let plan = localStorage.getItem("plan");
     const display = document.getElementById("coinBalance");
-    
+    if (!display) return;
+
     if (plan === "unlimited") {
         display.innerText = "Unlimited";
     } else {
@@ -85,9 +68,8 @@ function loadHistory() {
     let history = JSON.parse(localStorage.getItem("history")) || [];
     let list = document.getElementById("historyList");
     if (!list) return;
-    
+
     list.innerHTML = "";
-    // Show last 5 calls
     history.slice(-5).reverse().forEach(num => {
         let li = document.createElement("li");
         li.innerText = "📞 " + num;
@@ -97,10 +79,7 @@ function loadHistory() {
 
 // --- CALLING LOGIC ---
 function checkLogin() {
-    if (localStorage.getItem("userLogged") !== "true") {
-        alert("Please login with Google first.");
-        return false;
-    }
+    // TODO: Enable login check when auth is implemented
     return true;
 }
 
@@ -112,19 +91,20 @@ function makeCall() {
     if (!checkLogin()) return;
 
     const target = document.getElementById("targetNumber").value;
-    let coins = parseInt(localStorage.getItem("coins") || 0);
-    let plan = localStorage.getItem("plan");
 
     if (target.length < 5) {
         alert("Enter valid number");
         return;
     }
 
-    if (plan !== "unlimited" && coins < 100) {
-        alert("Insufficient coins (100 required)");
-        window.location.href = "pages/shop.html";
-        return;
-    }
+    // TODO: Enable coins check when payment system is implemented
+    // let coins = parseInt(localStorage.getItem("coins") || 0);
+    // let plan = localStorage.getItem("plan");
+    // if (plan !== "unlimited" && coins < 100) {
+    //     alert("Insufficient coins (100 required)");
+    //     window.location.href = "pages/shop.html";
+    //     return;
+    // }
 
     // Show Overlay
     document.getElementById("callOverlay").style.display = "flex";
@@ -135,12 +115,14 @@ function makeCall() {
         document.getElementById("callingStatus").innerText = "Connected";
         startTimer();
 
-        // Deduct Coins
-        if (plan !== "unlimited") {
-            coins -= 100;
-            localStorage.setItem("coins", coins);
-            document.getElementById("coinBalance").innerText = coins;
-        }
+        // TODO: Enable coin deduction when payment system is implemented
+        // let coins = parseInt(localStorage.getItem("coins") || 0);
+        // let plan = localStorage.getItem("plan");
+        // if (plan !== "unlimited") {
+        //     coins -= 100;
+        //     localStorage.setItem("coins", coins);
+        //     document.getElementById("coinBalance").innerText = coins;
+        // }
 
         // Save to History
         let history = JSON.parse(localStorage.getItem("history")) || [];
@@ -156,7 +138,7 @@ function startTimer() {
         seconds++;
         let mins = Math.floor(seconds / 60);
         let secs = seconds % 60;
-        document.getElementById("callTimer").innerText = 
+        document.getElementById("callTimer").innerText =
             (mins < 10 ? "0" + mins : mins) + ":" + (secs < 10 ? "0" + secs : secs);
     }, 1000);
 }
